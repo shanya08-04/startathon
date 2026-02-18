@@ -1,0 +1,55 @@
+import cv2
+import os
+import numpy as np
+import torch
+import matplotlib.pyplot as plt
+
+IMG_DIR = r"C:\Users\basan\OneDrive\Desktop\early coders\Offroad_Segmentation_Training_Dataset\Offroad_Segmentation_Training_Dataset\train\Color_Images"
+NAMES = ["cc0000012.png", "cc0000013.png", "cc0000014.png"]
+
+imgs = []
+orig_imgs = []
+
+for name in NAMES:
+    path = os.path.join(IMG_DIR, name)
+    img = cv2.imread(path)
+    if img is None:
+        raise FileNotFoundError(path)
+
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    orig_imgs.append(img)
+
+    img_resized = cv2.resize(img, (256, 256))
+    img_tensor = torch.from_numpy(img_resized).permute(2,0,1).float() / 255.0
+    imgs.append(img_tensor)
+
+X = torch.stack(imgs).to(device)
+
+model.eval()
+with torch.no_grad():
+    pred = torch.sigmoid(model(X)).cpu().numpy()  # shape: (N,1,H,W)
+
+plt.figure(figsize=(10,9))
+
+for i in range(len(NAMES)):
+    plt.subplot(3,3,3*i+1)
+    plt.imshow(orig_imgs[i])
+    plt.title("Input")
+    plt.axis("off")
+
+    plt.subplot(3,3,3*i+2)
+    plt.imshow(pred[i,0], cmap="viridis")
+    plt.title("Raw Prediction (heatmap)")
+    plt.axis("off")
+
+    plt.subplot(3,3,3*i+3)
+    plt.imshow(pred[i,0] > 0.3, cmap="gray")  # lowered threshold
+    plt.title("Thresholded Mask")
+    plt.axis("off")
+
+plt.tight_layout()
+plt.show()
+
+print("Min pred:", pred.min())
+print("Max pred:", pred.max())
+print("Mean pred:", pred.mean())
