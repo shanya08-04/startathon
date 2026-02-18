@@ -29,3 +29,6 @@ python test.py
 
 Mean IoU: ~0.60–0.65
 Inference speed: < 50ms per image
+
+
+
